@@ -42,9 +42,22 @@ st.html(textwrap.dedent("""
         display:inline-block;
     }
     .badge-low {
-        background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0;
+        background:#fef2f2; color:#dc2626; border:1px solid #fecaca;
         padding:3px 10px; border-radius:6px; font-size:11px; font-weight:700;
         display:inline-block;
+    }
+
+    /* ── Textarea styling ── */
+    .stTextArea textarea {
+        background-color: #f8fafc !important;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        color: #0f172a !important;
+        font-size: 13px !important;
+    }
+    .stTextArea textarea:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
     }
 
     /* ── Left Panel: Flagged Account Cards ── */
@@ -57,6 +70,7 @@ st.html(textwrap.dedent("""
     .flagged-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
     .flagged-card-high { border-left-color: #ef4444 !important; }
     .flagged-card-medium { border-left-color: #f59e0b !important; }
+    .flagged-card-low { border-left-color: #ef4444 !important; }
     .flagged-card-selected { background:#eff6ff; border-color:#93c5fd; }
     .flagged-acc-id { font-weight:700; font-size:13px; color:#1e40af; }
     .flagged-pattern { font-size:11px; color:#64748b; margin-top:3px; }
@@ -216,7 +230,7 @@ with st.sidebar:
         </div>
         <div>
             <div class="sidebar-brand-title">AML Fraud Detection</div>
-            <div class="sidebar-brand-subtitle">Graph-based Transaction Monitoring</div>
+            <div class="sidebar-brand-subtitle">Graph based Transaction Monitoring</div>
         </div>
     </div>
     """))
@@ -241,7 +255,7 @@ with col_h1:
     st.html(textwrap.dedent("""
     <div>
         <h1 class="header-title">AML Fraud Detection</h1>
-        <div class="header-subtitle">Graph-based Transaction Monitoring</div>
+        <div class="header-subtitle">Graph based Transaction Monitoring</div>
     </div>
     """))
 with col_h2:
@@ -267,15 +281,20 @@ if page == "Dashboard":
             <div class="banner-value">1,80,256</div>
             <div class="banner-subtext">↑ 12,430 today</div>
         </div>
-        <div style="margin-left:40px;">
+        <div style="margin-left:30px;">
             <div style="font-size:12px;color:#64748b;font-weight:600;">High Risk Alerts</div>
             <div style="font-size:26px;font-weight:800;color:#dc2626;">3</div>
             <div style="font-size:12px;color:#dc2626;font-weight:600;">Require Human Review</div>
         </div>
-        <div style="margin-left:40px;">
+        <div style="margin-left:30px;">
             <div style="font-size:12px;color:#64748b;font-weight:600;">Medium Risk</div>
             <div style="font-size:26px;font-weight:800;color:#d97706;">2</div>
             <div style="font-size:12px;color:#d97706;font-weight:600;">Under Monitoring</div>
+        </div>
+        <div style="margin-left:30px;">
+            <div style="font-size:12px;color:#64748b;font-weight:600;">Low Risk</div>
+            <div style="font-size:26px;font-weight:800;color:#dc2626;">2</div>
+            <div style="font-size:12px;color:#dc2626;font-weight:600;">Low Priority</div>
         </div>
         <div style="margin-left:auto;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 18px;text-align:center;">
             <div style="font-size:11px;color:#16a34a;font-weight:700;">SYSTEM STATUS</div>
@@ -305,7 +324,7 @@ if page == "Dashboard":
             pattern = tx["pattern"]
             is_sel = (tx["tx_id"] == st.session_state.selected_tx_id)
 
-            risk_color = "#ef4444" if risk == "High" else "#f59e0b" if risk == "Medium" else "#22c55e"
+            risk_color = "#ef4444" if risk == "High" else "#f59e0b" if risk == "Medium" else "#ef4444"
             sel_bg = "#eff6ff" if is_sel else "#ffffff"
             sel_border = "#93c5fd" if is_sel else "#e2e8f0"
             bar_width = score
@@ -374,18 +393,8 @@ if page == "Dashboard":
 
         fan_rows = fraud_data.get_fan_out_rows(st.session_state.selected_tx_id)
         df_fan = pd.DataFrame(fan_rows)
-        df_fan.columns = ["Sub-TX ID", "To Account", "Amount (₹)", "Time", "Acc. Age (days)", "Status"]
-
-        # Age coloring
-        def age_color(age):
-            if age <= 7:
-                return "🔴"
-            elif age <= 30:
-                return "🟡"
-            return "🟢"
-
-        df_fan["Age Risk"] = df_fan["Acc. Age (days)"].apply(lambda a: age_color(a))
-        df_display = df_fan[["Sub-TX ID", "To Account", "Amount (₹)", "Time", "Acc. Age (days)", "Age Risk", "Status"]]
+        df_fan.columns = ["Sub-TX ID", "To Account", "Amount (₹)", "Time", "Account age(days)", "Status"]
+        df_display = df_fan[["Sub-TX ID", "To Account", "Amount (₹)", "Time", "Account age(days)", "Status"]]
 
         # Clickable table with row selection
         event = st.dataframe(
@@ -407,7 +416,6 @@ if page == "Dashboard":
         st.html("""
         <div style="font-size:10.5px;color:#94a3b8;margin-top:4px;">
             🖱️ Click a row to view the receiver's customer profile in the right panel.
-            🔴 Age &lt;7d · 🟡 7–30d · 🟢 &gt;30d
         </div>
         """)
 
@@ -434,19 +442,7 @@ if page == "Dashboard":
         </div>
         """))
 
-        # ── AI Advisory ──
-        st.html(textwrap.dedent("""
-        <div class="ai-advisory">
-            <span style="font-size:16px;">🤖</span>
-            <span>
-                <b>AI Advisory:</b> The analysis above is generated by an AI model to
-                <b>support the fraud investigator's decision</b>. The AI does not block or approve
-                transactions. All final decisions must be made by an authorized bank employee.
-            </span>
-        </div>
-        """))
-
-        # ── Human Decision Panel (HIGH RISK ONLY) ──
+        # ── Authorised Bank Auditor Decision Panel (HIGH RISK ONLY) ──
         if is_high:
             tx_key = curr_tx["tx_id"]
             already_submitted = st.session_state.human_decision_submitted.get(tx_key)
@@ -454,10 +450,10 @@ if page == "Dashboard":
             st.html(textwrap.dedent(f"""
             <div class="human-decision-panel">
                 <div class="human-decision-title">
-                    🏦 Human Decision Required — {curr_tx['tx_id']}
+                    🏦 Authorised Bank Auditor Decision Required — {curr_tx['tx_id']}
                 </div>
                 <div style="font-size:12px;color:#92400e;margin-bottom:12px;">
-                    Risk Score: <b>{risk_score}/100</b> — This transaction requires a bank investigator decision.
+                    Risk Score: <b>{risk_score}/100</b> — This transaction requires an authorised bank auditor decision.
                 </div>
             </div>
             """))
@@ -467,7 +463,7 @@ if page == "Dashboard":
                 color_map = {"✅ Approve Transaction": "#16a34a", "🚫 Block Transaction": "#dc2626", "📤 Escalate to Senior Investigator": "#d97706"}
                 col = color_map.get(decision_val, "#16a34a")
                 st.success(f"**Decision Recorded:** {decision_val}")
-                st.info(f"**Investigator Notes:** {already_submitted['notes'] or '(none)'}")
+                st.info(f"**Authorised Bank Auditor Notes:** {already_submitted['notes'] or '(none)'}")
                 if st.button("Revise Decision", key=f"revise_{tx_key}"):
                     del st.session_state.human_decision_submitted[tx_key]
                     st.rerun()
@@ -475,23 +471,23 @@ if page == "Dashboard":
                 dec_col1, dec_col2 = st.columns([1, 1])
                 with dec_col1:
                     decision = st.radio(
-                        "**Investigator Decision**",
+                        "**Authorised Bank Auditor Decision**",
                         ["✅ Approve Transaction", "🚫 Block Transaction", "📤 Escalate to Senior Investigator"],
                         key=f"decision_{tx_key}",
                         index=2
                     )
                 with dec_col2:
                     notes = st.text_area(
-                        "**Investigator Notes**",
+                        "**Authorised Bank Auditor Notes**",
                         placeholder="Add reasoning, observations, or escalation notes...",
                         key=f"notes_{tx_key}",
-                        height=112
+                        height=180
                     )
 
                 st.html("""
                 <div class="human-decision-disclaimer">
                     ⚠️ <b>Disclaimer:</b> By submitting, you confirm this decision is made by an
-                    authorized bank employee. The AI model provided supporting analysis only.
+                    AUTHORISED BANK AUDITOR. The AI model provided supporting analysis only.
                     This action will be logged and audited.
                 </div>
                 """)
@@ -503,6 +499,18 @@ if page == "Dashboard":
                         "timestamp": datetime.now().strftime("%d %b %Y, %I:%M %p")
                     }
                     st.rerun()
+
+        # ── AI Advisory (COMPLETELY AT BOTTOM) ──
+        st.html(textwrap.dedent("""
+        <div class="ai-advisory" style="margin-top:16px;">
+            <span style="font-size:16px;">🤖</span>
+            <span>
+                <b>AI Advisory:</b> The analysis above is generated by an AI model to
+                <b>support the fraud investigator's decision</b>. The AI does not block or approve
+                transactions. All final decisions must be made by an AUTHORIZED BANK AUDITOR.
+            </span>
+        </div>
+        """))
 
     # ════════════════════════════════════════════════════════════════════
     #  RIGHT PANEL — Customer Profile (receiver, on row click)
@@ -576,16 +584,8 @@ if page == "Dashboard":
                         <div class="profile-metric-val">{profile.get('city', '—')}</div>
                     </div>
                     <div class="profile-metric-card">
-                        <div class="profile-metric-label">KYC Status</div>
-                        <div class="profile-metric-val {kyc_class}">{kyc}</div>
-                    </div>
-                    <div class="profile-metric-card">
                         <div class="profile-metric-label">Open Since</div>
                         <div class="profile-metric-val" style="font-size:12px;">{profile.get('open_since', '—')}</div>
-                    </div>
-                    <div class="profile-metric-card">
-                        <div class="profile-metric-label">Devices</div>
-                        <div class="profile-metric-val">{profile.get('device_count', '—')}</div>
                     </div>
                     <div class="profile-metric-card">
                         <div class="profile-metric-label">Account Age (days)</div>
@@ -599,17 +599,6 @@ if page == "Dashboard":
                         {beh_rows_html}
                     </tbody>
                 </table>
-
-                <div style="background:#fff5f5;border:1px solid #fecaca;border-radius:8px;
-                            padding:10px 12px;margin-top:12px;font-size:12px;color:#7f1d1d;">
-                    <b>🔍 AI Observation:</b> {profile.get('notes', 'No additional notes.')}
-                </div>
-
-                <div style="margin-top:12px;font-size:11px;color:#94a3b8;text-align:center;">
-                    Sub-TX: <b>{sub_tx.get('sub_tx_id')}</b> ·
-                    ₹{sub_tx.get('amount')} ·
-                    {sub_tx.get('time')}
-                </div>
             </div>
             """))
 
@@ -644,11 +633,11 @@ elif page == "Transactions":
 #  ALERTS / GRAPH NETWORK PAGE
 # ══════════════════════════════════════════════════════════════════════════════
 elif page == "Alerts / Graph Network":
-    st.subheader("🕸️ Graph Network Topology & Fraud Rings")
+    st.subheader("🕸️ Money Trail")
     st.markdown(
         "Visualizing transactional connections up to **2 hops**. "
         "Hover over any node to see the customer profile. "
-        "Source (★) → Hop-1 Receivers (●) → Hop-2 Downstream Nodes (◆)"
+        "Sender (★) → Hop-1 Receivers (●) → Hop-2 Downstream Nodes (◆)"
     )
 
     # Pre-select the tx from dashboard if navigated via the graph button
@@ -669,7 +658,7 @@ elif page == "Alerts / Graph Network":
     tx_info = fraud_data.get_transaction_by_id(sel_tx)
 
     # Info bar
-    risk_col = "#dc2626" if tx_info["risk"] == "High" else "#d97706" if tx_info["risk"] == "Medium" else "#16a34a"
+    risk_col = "#dc2626" if tx_info["risk"] == "High" else "#d97706" if tx_info["risk"] == "Medium" else "#dc2626"
     st.html(textwrap.dedent(f"""
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;
                 padding:14px 18px;margin-bottom:16px;display:flex;gap:28px;align-items:center;">
@@ -704,14 +693,14 @@ elif page == "Alerts / Graph Network":
     <div style="display:flex;gap:24px;justify-content:center;margin-top:4px;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#475569;">
             <span style="width:14px;height:14px;background:#ef4444;border-radius:50%;display:inline-block;"></span>
-            Source Account (Sender)
+            Sender Account
         </div>
         <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#475569;">
             <span style="width:14px;height:14px;background:#f59e0b;border-radius:50%;display:inline-block;"></span>
             Hop-1 Direct Receivers
         </div>
         <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#475569;">
-            <span style="width:14px;height:14px;background:#94a3b8;border-radius:4px;display:inline-block;"></span>
+            <span style="width:14px;height:14px;background:#e2e8f0;border:1px solid #cbd5e1;border-radius:4px;display:inline-block;"></span>
             Hop-2 Downstream Nodes
         </div>
         <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#475569;">
@@ -719,7 +708,7 @@ elif page == "Alerts / Graph Network":
             Hop-1 Transfer (amount shown)
         </div>
         <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#475569;">
-            <span style="width:28px;height:2px;background:#cbd5e1;border-bottom:2px dashed #cbd5e1;display:inline-block;"></span>
+            <span style="width:28px;height:2px;background:#e2e8f0;border-bottom:2px dashed #cbd5e1;display:inline-block;"></span>
             Hop-2 Transfer
         </div>
     </div>
@@ -786,8 +775,8 @@ elif page == "Help":
 1. Click a **Flagged Account** in the left panel to load its transactions.
 2. Click any **row** in the transaction table to view the **receiver's customer profile** on the right.
 3. Tap **"View as Graph Network"** to visualize the 2-hop transaction network.
-4. For **High Risk** transactions, submit your decision in the **Human Decision Panel**.
+4. For **High Risk** transactions, submit your decision in the **Authorised Bank Auditor Decision Panel**.
 
 ### AI Advisory Disclaimer:
-The AI model provides pattern analysis and risk scores to *support* the investigation. **Final decisions must always be made by an authorized bank employee.**
+The AI model provides pattern analysis and risk scores to *support* the investigation. **Final decisions must always be made by an AUTHORIZED BANK AUDITOR.**
     """)

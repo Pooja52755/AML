@@ -529,7 +529,7 @@ def create_network_graph(tx_id, include_2hop=True):
     G.add_node(
         source_acc,
         node_type="source",
-        label=f"Source\n{source_acc}",
+        label=f"Sender\n{source_acc}",
         color="#ef4444" if tx["risk"] == "High" else "#2563eb",
         hop=0
     )
@@ -551,7 +551,7 @@ def create_network_graph(tx_id, include_2hop=True):
                         hop2,
                         node_type="hop2",
                         label=f"2-Hop\n{hop2}",
-                        color="#94a3b8",
+                        color="#e2e8f0",
                         hop=2
                     )
                     G.add_edge(target, hop2, amount="Transfer", hop=2)
@@ -568,7 +568,7 @@ def create_network_graph(tx_id, include_2hop=True):
             for acc in tx["to_accounts"]:
                 if acc in TWO_HOP_NEIGHBORS:
                     for hop2 in TWO_HOP_NEIGHBORS[acc]:
-                        G.add_node(hop2, node_type="hop2", label=f"2-Hop\n{hop2}", color="#94a3b8", hop=2)
+                        G.add_node(hop2, node_type="hop2", label=f"2-Hop\n{hop2}", color="#e2e8f0", hop=2)
                         G.add_edge(acc, hop2, amount="Transfer", hop=2)
 
     else:
@@ -578,7 +578,7 @@ def create_network_graph(tx_id, include_2hop=True):
 
             if include_2hop and target in TWO_HOP_NEIGHBORS:
                 for hop2 in TWO_HOP_NEIGHBORS[target]:
-                    G.add_node(hop2, node_type="hop2", label=f"2-Hop\n{hop2}", color="#94a3b8", hop=2)
+                    G.add_node(hop2, node_type="hop2", label=f"2-Hop\n{hop2}", color="#e2e8f0", hop=2)
                     G.add_edge(target, hop2, amount="Transfer", hop=2)
 
     return G

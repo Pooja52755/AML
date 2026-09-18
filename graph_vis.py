@@ -18,7 +18,7 @@ def _build_hover_text(node, data):
         # Source sender node
         profile = fraud_data.get_customer_profile(node)
         return (
-            f"<b>🔴 SOURCE ACCOUNT</b><br>"
+            f"<b>🔴 SENDER ACCOUNT</b><br>"
             f"<b>{profile.get('name', node)}</b><br>"
             f"Account: {node}<br>"
             f"KYC: {profile.get('kyc_status', '—')}<br>"
@@ -78,8 +78,8 @@ def render_plotly_graph(tx_id, include_2hop=True):
         hop = edge[2].get("hop", 1)
         amount = edge[2].get("amount", "Transfer")
 
-        color = "#ef4444" if hop == 1 else "#cbd5e1"
-        width = 2.5 if hop == 1 else 1.2
+        color = "#ef4444" if hop == 1 else "#e2e8f0"
+        width = 2.5 if hop == 1 else 0.8
         dash = "solid" if hop == 1 else "dot"
 
         edge_traces.append(go.Scatter(
@@ -118,12 +118,14 @@ def render_plotly_graph(tx_id, include_2hop=True):
 
     group_styles = {
         "source": dict(
-            name="Source Account",
+            name="Sender Account",
             symbol="star",
             size=38,
             color_fn=lambda d: d.get("color", "#ef4444"),
             line_color="#ffffff",
             line_width=3,
+            text_color="#1e293b",
+            opacity=0.95,
         ),
         "hop1": dict(
             name="Hop-1 Receivers",
@@ -132,14 +134,18 @@ def render_plotly_graph(tx_id, include_2hop=True):
             color_fn=lambda d: d.get("color", "#f59e0b"),
             line_color="#ffffff",
             line_width=2,
+            text_color="#334155",
+            opacity=0.95,
         ),
         "hop2": dict(
             name="Hop-2 Nodes",
             symbol="diamond",
-            size=18,
-            color_fn=lambda d: d.get("color", "#94a3b8"),
-            line_color="#e2e8f0",
-            line_width=1.5,
+            size=15,
+            color_fn=lambda d: "#f1f5f9",
+            line_color="#cbd5e1",
+            line_width=1,
+            text_color="#94a3b8",
+            opacity=0.65,
         ),
     }
 
@@ -159,7 +165,7 @@ def render_plotly_graph(tx_id, include_2hop=True):
             name=style["name"],
             text=labels,
             textposition="top center",
-            textfont=dict(size=9, color="#334155"),
+            textfont=dict(size=9, color=style["text_color"]),
             hoverinfo="text",
             hovertext=hover,
             hoverlabel=dict(
@@ -173,7 +179,7 @@ def render_plotly_graph(tx_id, include_2hop=True):
                 size=style["size"],
                 color=colors,
                 line=dict(width=style["line_width"], color=style["line_color"]),
-                opacity=0.95,
+                opacity=style["opacity"],
             ),
             showlegend=True,
         ))
@@ -202,7 +208,7 @@ def render_plotly_graph(tx_id, include_2hop=True):
             title=dict(
                 text=f"<b>Transaction Network — {tx_id}</b>   "
                      f"<span style='font-size:12px;color:#64748b;'>"
-                     f"◉ Source  🟡 Hop-1 Receivers  ◆ Hop-2 Nodes  "
+                     f"★ Sender  🟡 Hop-1 Receivers  ◆ Hop-2 Nodes  "
                      f"— Hover any node for customer profile</span>",
                 font=dict(size=14, color="#1e293b"),
                 x=0.0,
